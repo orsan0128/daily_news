@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>新聞報報</title>
+<style>
+:root {
+  --bg: #f5f5f5;
+  --card-bg: #fff;
+  --text: #1a1a1a;
+  --text-secondary: #666;
+  --border: #e8e8e8;
+  --accent: #e63946;
+  --source-et: #e63946;
+  --source-msn: #0078d4;
+  --source-yahoo: #7b0099;
+  --source-ltn: #999;
+  --tab-bg: #fff;
+  --tab-active: #e63946;
+  --tab-inactive: #888;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+  --radius: 12px;
+}
+[data-theme="dark"] {
+  --bg: #121212;
+  --card-bg: #1e1e1e;
+  --text: #e8e8e8;
+  --text-secondary: #999;
+  --border: #333;
+  --tab-bg: #1e1e1e;
+  --shadow: 0 1px 3px rgba(0,0,0,.3);
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+/* Header */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px 0;
+}
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.logo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.btn-icon {
+  width: 36px; height: 36px;
+  border: none;
+  background: var(--bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text);
+  transition: background .2s;
+}
+.btn-icon:active { background: var(--border); }
+
+/* Category Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 0;
+}
+.tabs::-webkit-scrollbar { display: none; }
+.tab {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--tab-inactive);
+  border: none;
+  background: none;
+  cursor: pointer;
+  position: relative;
+  white-space: nowrap;
+  transition: color .2s;
+}
+.tab.active {
+  color: var(--tab-active);
+}
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 3px;
+  background: var(--tab-active);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Source Filter */
+.source-filter {
+  display: flex;
+  gap: 8px;
+  padding: 10px 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.source-filter::-webkit-scrollbar { display: none; }
+.source-chip {
+  flex-shrink: 0;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all .2s;
+}
+.source-chip.active {
+  color: #fff;
+  border-color: transparent;
+}
+.source-chip[data-source="all"].active { background: var(--text); }
+.source-chip[data-source="ETtoday"].active { background: var(--source-et); }
+.source-chip[data-source="MSN"].active { background: var(--source-msn); }
+.source-chip[data-source="Yahoo"].active { background: var(--source-yahoo); }
+
+
+/* News List */
+.news-list {
+  padding: 8px 16px 100px;
+}
+.news-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.news-card:active {
+  transform: scale(0.98);
+}
+.news-card-inner {
+  display: flex;
+  padding: 14px;
+  gap: 12px;
+}
+.news-card.no-image .news-card-text {
+  flex: 1;
+}
+.news-card-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.news-title {
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.45;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.news-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.source-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+}
+.source-badge.ETtoday { background: var(--source-et); }
+.source-badge.MSN { background: var(--source-msn); }
+.source-badge.Yahoo { background: var(--source-yahoo); }
+.source-badge.自由時報 { background: var(--source-ltn); }
+.news-snippet {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+.news-thumb {
+  width: 110px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
+/* Loading & Refresh */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+.spinner {
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  margin-bottom: 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Pull to refresh indicator */
+.refresh-indicator {
+  text-align: center;
+  padding: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: none;
+}
+.refresh-indicator.visible { display: block; }
+
+/* Empty state */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-secondary);
+}
+.empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; line-height: 1.6; }
+
+/* Stats bar */
+.stats-bar {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <div class="logo">📰 新聞報報</div>
+    <div class="header-actions">
+      <button class="btn-icon" onclick="refreshAll()" title="重新整理">🔄</button>
+      <button class="btn-icon" onclick="toggleTheme()" title="切換主題" id="themeBtn">🌙</button>
+    </div>
+  </div>
+  <div class="tabs" id="tabs"></div>
+</div>
+<div class="source-filter" id="sourceFilter"></div>
+<div class="stats-bar" id="statsBar"></div>
+<div class="refresh-indicator" id="refreshIndicator">下拉重新整理...</div>
+<div class="news-list" id="newsList">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>載入新聞中...</div>
+  </div>
+</div>
+
+<script>
+// ===== Config =====
+const CATEGORIES = [
+  { id: 'all', name: '全部' },
+  { id: 'realtime', name: '即時' },
+  { id: 'politics', name: '政治' },
+  { id: 'finance', name: '財經' },
+  { id: 'society', name: '社會' },
+  { id: 'sports', name: '運動' },
+  { id: 'entertainment', name: '星聞' },
+  { id: 'global', name: '國際' },
+];
+
+const SOURCES = ['all', 'MSN', 'ETtoday', 'Yahoo'];
+const SOURCE_LABELS = { 'all': '全部來源', 'MSN': 'MSN', 'ETtoday': 'ETtoday', 'Yahoo': 'Yahoo奇摩' };
+
+// Category → RSS URL mapping per source
+const RSS_MAP = {
+  'ETtoday': {
+    realtime: 'https://feeds.feedburner.com/ettoday/realtime',
+    politics: 'https://feeds.feedburner.com/ettoday/news',
+    finance: 'https://feeds.feedburner.com/ettoday/finance',
+    society: 'https://feeds.feedburner.com/ettoday/society',
+    sports: 'https://feeds.feedburner.com/ettoday/sport',
+    entertainment: 'https://feeds.feedburner.com/ettoday/star',
+    global: 'https://feeds.feedburner.com/ettoday/global',
+  },
+  'UDN': {
+    realtime: 'https://udn.com/rssfeed/news/2/6638',
+    finance: 'https://udn.com/rssfeed/news/2/6644',
+    global: 'https://udn.com/rssfeed/news/2/6639',
+    society: 'https://udn.com/rssfeed/news/2/6640',
+  },
+
+};
+
+// ===== State =====
+let allArticles = [];
+let currentCategory = 'all';
+let currentSource = 'all';
+let isDark = false;
+
+// ===== Init =====
+function init() {
+  // Load theme from localStorage
+  isDark = localStorage.getItem('theme') === 'dark';
+  applyTheme();
+
+  // Render tabs
+  const tabsEl = document.getElementById('tabs');
+  tabsEl.innerHTML = CATEGORIES.map(c =>
+    `<button class="tab${c.id === currentCategory ? ' active' : ''}" data-cat="${c.id}" onclick="selectCategory('${c.id}')">${c.name}</button>`
+  ).join('');
+
+  // Render source chips
+  const filterEl = document.getElementById('sourceFilter');
+  filterEl.innerHTML = SOURCES.map(s =>
+    `<button class="source-chip${s === currentSource ? ' active' : ''}" data-source="${s}" onclick="selectSource('${s}')">${SOURCE_LABELS[s]}</button>`
+  ).join('');
+
+  // If running in Android WebView, data is injected via Java
+  // If running in browser, load demo data
+  if (!window.Android) {
+    loadDemoData();
+  }
+}
+
+// ===== Category / Source Selection =====
+function selectCategory(cat) {
+  currentCategory = cat;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.cat === cat));
+  renderNews();
+}
+
+function selectSource(src) {
+  currentSource = src;
+  document.querySelectorAll('.source-chip').forEach(c => c.classList.toggle('active', c.dataset.source === src));
+  renderNews();
+}
+
+// ===== Theme =====
+function toggleTheme() {
+  isDark = !isDark;
+  applyTheme();
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+
+function applyTheme() {
+  document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+}
+
+// ===== Data =====
+// Called from Java: window.loadNews(JSON.stringify(articles))
+function loadNews(jsonStr) {
+  try {
+    allArticles = JSON.parse(jsonStr);
+    document.getElementById('loading').style.display = 'none';
+    renderNews();
+  } catch(e) {
+    console.error('Parse error:', e);
+  }
+}
+
+function refreshAll() {
+  if (window.Android && window.Android.refreshFeeds) {
+    window.Android.refreshFeeds();
+    document.getElementById('refreshIndicator').classList.add('visible');
+    setTimeout(() => {
+      document.getElementById('refreshIndicator').classList.remove('visible');
+    }, 2000);
+  }
+}
+
+// ===== Render =====
+function renderNews() {
+  const list = document.getElementById('newsList');
+  const filtered = allArticles.filter(a => {
+    if (currentSource !== 'all' && a.source !== currentSource) return false;
+    if (currentCategory !== 'all' && a.category !== currentCategory) return false;
+    return true;
+  });
+
+  // Stats
+  const statsBar = document.getElementById('statsBar');
+  const sourceCounts = {};
+  filtered.forEach(a => {
+    sourceCounts[a.source] = (sourceCounts[a.source] || 0) + 1;
+  });
+  const statsText = Object.entries(sourceCounts)
+    .map(([s, c]) => `${s}: ${c}`)
+    .join(' · ');
+  statsBar.textContent = filtered.length > 0 ? `${filtered.length} 則新聞${statsText ? ' · ' + statsText : ''}` : '';
+
+  if (filtered.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <div class="emoji">📭</div>
+        <p>目前沒有新聞<br>請嘗試切換分類或來源</p>
+      </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map((article, i) => {
+    const hasImage = article.image && article.image.length > 0;
+    return `
+    <div class="news-card${hasImage ? '' : ' no-image'}" onclick="openArticle('${escapeAttr(article.link)}')">
+      <div class="news-card-inner">
+        <div class="news-card-text">
+          <div class="news-title">${escapeHtml(article.title)}</div>
+          ${article.snippet ? `<div class="news-snippet">${escapeHtml(article.snippet)}</div>` : ''}
+          <div class="news-meta">
+            <span class="source-badge ${escapeAttr(article.source)}">${escapeHtml(article.source)}</span>
+            <span>${escapeHtml(article.time)}</span>
+          </div>
+        </div>
+        ${hasImage ? `<img class="news-thumb" src="${escapeAttr(article.image)}" loading="lazy" onerror="this.style.display='none'">` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== Article Open =====
+function openArticle(url) {
+  if (window.Android && window.Android.openArticle) {
+    window.Android.openArticle(url);
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+// ===== Helpers =====
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escapeAttr(str) {
+  if (!str) return '';
+  return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+// ===== Demo Data (browser preview) =====
+function loadDemoData() {
+  const demo = [
+    { source:'ETtoday', category:'realtime', title:'【即時】台灣股市今日大漲300點 創歷史新高', snippet:'台股加權指數今日在電子股領軍下大漲，收盤創下歷史新高紀錄...', link:'https://www.ettoday.net', image:'https://picsum.photos/seed/n1/200/200', time:'5 分鐘前' },
+    { source:'UDN', category:'finance', title:'央行宣布維持利率不變 符合市場預期', snippet:'中央銀行今日召開理監事會議，決議維持貼現率不變...', link:'https://udn.com', image:'https://picsum.photos/seed/n2/200/200', time:'12 分鐘前' },
+    { source:'Yahoo', category:'finance', title:'央行宣布維持利率不變 符合市場預期', snippet:'中央銀行今日召開理監事會議，決議維持貼現率不變...', link:'https://tw.finance.yahoo.com', image:'https://picsum.photos/seed/n2/200/200', time:'12 分鐘前' },
+    { source:'Yahoo', category:'realtime', title:'捷運新路線通車 首日運量破10萬人次', snippet:'備受期待的捷運新路線今日正式通車，吸引大批民眾搭乘...', link:'https://tw.news.yahoo.com', image:'', time:'28 分鐘前' },
+    { source:'Yahoo', category:'finance', title:'台股今日大漲300點 零股族搶進', snippet:'台股加權指數今日在電子股領軍下大漲，零股成交量爆量...', link:'https://tw.stock.yahoo.com', image:'https://picsum.photos/seed/n5/200/200', time:'1 小時前' },
+    { source:'ETtoday', category:'global', title:'國際新聞：全球科技巨頭宣布重大合作', snippet:'多家國際科技公司宣布策略聯盟，將共同開發下一代AI技術...', link:'https://www.ettoday.net', image:'', time:'1 小時前' },
+    { source:'Yahoo', category:'realtime', title:'世界盃開幕 各國球星備戰', snippet:'2026美加墨世界盃明日開幕，各隊球星積極備戰...', link:'https://tw.news.yahoo.com', image:'', time:'2 小時前' },
+    { source:'UDN', category:'society', title:'台北美食節開跑 百家餐廳推出限定套餐', snippet:'一年一度的台北美食節今日盛大開幕，匯集百家人氣餐廳...', link:'https://udn.com', image:'', time:'2 小時前' },
+    { source:'ETtoday', category:'entertainment', title:'金馬獎提名名單公布 這些作品入圍最佳影片', snippet:'第61屆金馬獎提名名單今日揭曉，多部優秀作品角逐大獎...', link:'https://www.ettoday.net', image:'https://picsum.photos/seed/n9/200/200', time:'3 小時前' },
+    { source:'ETtoday', category:'finance', title:'房市政策新措施 專家這樣看', snippet:'內政部公布房市調控新措施，房產專家分析可能影響...', link:'https://www.ettoday.net', image:'', time:'3 小時前' },
+  ];
+  allArticles = demo;
+  document.getElementById('loading').style.display = 'none';
+  renderNews();
+}
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+# Android build
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+
+# Build outputs (keep APK releases in root)
+android/app/build/outputs/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Gradle wrapper jar
+android/gradle/wrapper/gradle-wrapper.jar
+release-key.jks
+*.aab
+*.apk
